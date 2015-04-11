@@ -104,13 +104,14 @@ float lambda = 0.1f;
 //max subdivision depth, for adaptive tessellation
 float max_subdivisions = 7;
 
+//the triangles to render
+triangles* triangles;
+
 //****************************************************
 // Simple init function
 //****************************************************
-void initScene(){
-
+void initScene() {
   // 3D setup - shamelessly stolen from https://www3.ntu.edu.sg/home/ehchua/programming/opengl/CG_Examples.html
-
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClearDepth(1.0f);
   glEnable(GL_DEPTH_TEST);
@@ -222,7 +223,7 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
 
   //now generate triangle array from our buffer of points
   //2 triangles per quad
-  triangle triangles[2*(numdiv-1)*(numdiv-1)];
+  triangles = (triangle*) malloc(2*(numdiv-1)*(numdiv-1) * sizeof(triangle));
   triangle* temp;
   for (int x = 0; x < numdiv - 1; x++) {
     for (int y = 0; y < numdiv - 1; y++) {
@@ -283,13 +284,7 @@ void myDisplay() {
             0.0f, 1.0f, 0.0f);    // up vector
 
 
-  //test draw
-  color* blue = (color*)malloc(sizeof(color));
-  blue->r = 0.0f;
-  blue->g = 0.0f;
-  blue->b = 1.0f;
-
-  triangle triangles[] = subdivideUniform(patch, step, blue);
+  
 
   triangle* test = (triangle*)malloc(sizeof(triangle));
 
@@ -359,6 +354,14 @@ int main(int argc, char *argv[]) {
   }
 
   //read in patch file
+
+  //set up and generate triangles
+  color* blue = (color*)malloc(sizeof(color));
+  blue->r = 0.0f;
+  blue->g = 0.0f;
+  blue->b = 1.0f;
+
+  triangles = subdivideUniform(patch, step, blue);
 
   //This initializes glut
   glutInit(&argc, argv);
