@@ -75,6 +75,16 @@ struct triangle {
 };
 typedef struct triangle triangle;
 
+struct curve {
+  vec3 points[4];
+};
+typedef struct curve curve;
+
+struct patch {
+  vec3 curves[4];
+};
+typedef struct patch patch;
+
 //****************************************************
 // Global Variables
 //****************************************************
