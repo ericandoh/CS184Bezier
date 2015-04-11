@@ -81,7 +81,7 @@ struct curve {
 typedef struct curve curve;
 
 struct patch {
-  vec3 curves[4];
+  curve curves[4];
 };
 typedef struct patch patch;
 
@@ -173,15 +173,80 @@ void subtract(vec3 *dest, vec3 *a, vec3 *b) {
   dest->z = a->z - b->z;
 }
 
-
-void bezCurveInterp(vec3 *p, vec3 *dPdu, curve* curve, float u) {
-  
-
-
+void add(vec3 *dest, vec3 *a, vec3 *b) {
+  dest->x = a->x + b->x;
+  dest->y = a->y + b->y;
+  dest->z = a->z + b->z;
 }
 
-void bezPatchInterp(vec3 *p, vec3 *norm, patch* patch, float u, float v) {
+void set(vec3* dest, vec3* src) {
+  dest->x = src->x;
+  dest->y = src->y;
+  dest->z = src->z;
+}
 
+void crossProduct(vec3* dest, vec3* first, vec3* second) {
+  dest->x = first->y * second->z - first->z * second->y;
+  dest->y = first->z * second->x - first->x * second->z;
+  dest->z = first->x * second->y - first->y * second->x;
+}
+
+void bezCurveInterp(vec3* p, vec3* dPdu, curve* curve, float u) {
+  vec3 a;
+  vec3 b;
+  vec3 c;
+  vec3 d;
+  vec3 e;
+  vec3 temp1;
+  vec3 temp2;
+  // get vec3 A
+  scale(&temp1, &(curve->points[0]), 1.0f - u);
+  scale(&temp2, &(curve->points[1]), u);
+  add(&a, &temp1, &temp2);
+  // get vec3 B
+  scale(&temp1, &(curve->points[1]), 1.0f - u);
+  scale(&temp2, &(curve->points[2]), u);
+  add(&b, &temp1, &temp2);
+  // get vec3 C
+  scale(&temp1, &(curve->points[2]), 1.0f - u);
+  scale(&temp2, &(curve->points[3]), u);
+  add(&c, &temp1, &temp2);
+  // get vec3 D
+  scale(&temp1, &a, 1.0f - u);
+  scale(&temp2, &b, u);
+  add(&d, &temp1, &temp2);
+  // get vec3 E
+  scale(&temp1, &b, 1.0f - u);
+  scale(&temp2, &c, u);
+  add(&e, &temp1, &temp2);
+  // get p
+  scale(&temp1, &d, 1.0f - u);
+  scale(temp2, &e, u);
+  add(p, &temp1, &temp2);
+  // get dPdu
+  subtract(&temp1, &e, &d);
+  scale(dPdu, &temp1, 3.0f);
+}
+
+void bezPatchInterp(point* p, patch* patch, float u, float v) {
+  curve vcurve;
+  curve ucurve;
+  vec3 temp;
+  for(int i = 0; i <= 3; i++) {
+    bezCurveInterp(&(vcurve->points[i]), &temp, &(patch->curves[i]), u);
+    curve tempCurve;
+    for(int j = 0; j <= 3; j++) {
+      set(&(tempCurve->points[j]), &(patch->curves[j].points[i]));
+    }
+    bezCurveInterp(&(ucurve->points[i]), &temp, &tempCurve, v);
+  }
+  vec3 dPdv;
+  vec3 dPdu;
+  bezCurveInterp(&(p->pos), &dPdv, vcurve, v);
+  bezCurveInterp(&(p->pos), &dPdu, ucurve, u);
+  
+  crossProduct(&(p->norm), &dPdu, &dPdv);
+  normalize(&(p->norm));
 }
 
 void subdivideUniform(patch* patch, float step) {
