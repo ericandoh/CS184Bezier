@@ -69,8 +69,14 @@ struct color {
 };
 typedef struct color color;
 
+struct point {
+  vec3 pos;
+  vec3 norm;
+};
+typedef struct point point;
+
 struct triangle {
-  vec3 a, b, c;
+  point a, b, c;
   color* color;
 };
 typedef struct triangle triangle;
@@ -88,15 +94,24 @@ typedef struct patch patch;
 //****************************************************
 // Global Variables
 //****************************************************
+
 Viewport  viewport;
+
+//step size, for uniform tessellation
+float step = 0.1f;
+//lambda (max error), for adaptive tessellation
+float lambda = 0.1f;
+//max subdivision depth, for adaptive tessellation
+float max_subdivisions = 7;
+
+//the triangles to render
+triangles* triangles;
 
 //****************************************************
 // Simple init function
 //****************************************************
-void initScene(){
-
+void initScene() {
   // 3D setup - shamelessly stolen from https://www3.ntu.edu.sg/home/ehchua/programming/opengl/CG_Examples.html
-
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClearDepth(1.0f);
   glEnable(GL_DEPTH_TEST);
@@ -249,9 +264,55 @@ void bezPatchInterp(point* p, patch* patch, float u, float v) {
   normalize(&(p->norm));
 }
 
-void subdivideUniform(patch* patch, float step) {
+triangle* subdivideUniform(patch* patch, float step, color* color) {
+  //performs uniform subdivision
 
+  //temp variables u, v
+  float u, v;
+
+  //round a small bit to account for rounding error
+  //number of subdivisions
+  int numdiv = (int) (1.0001f / step);
+
+  //buffer to store points
+  point points[numdiv][numdiv];
+
+  for (int iu = 0; iu < numdiv; iu++) {
+    u = iu * step;
+    for (int iv = 0; iv < numdiv; iv++) {
+      v = iv * step;
+      //evaluate surface
+      bezPatchInterp(&(point[iu][iv]), patch, u, v);
+    }
+  }
+
+  //now generate triangle array from our buffer of points
+  //2 triangles per quad
+  triangles = (triangle*) malloc(2*(numdiv-1)*(numdiv-1) * sizeof(triangle));
+  triangle* temp;
+  for (int x = 0; x < numdiv - 1; x++) {
+    for (int y = 0; y < numdiv - 1; y++) {
+      
+      //first triangle
+      temp = &(triangles[ 2*(y+x*(numdiv-1)) ]);
+      temp->a = points[x][y];
+      temp->b = points[x][y+1];
+      temp->c = points[x+1][y];
+      temp->color = color
+
+      //second triangle
+      temp = &(triangles[ 2*(y+x*(numdiv-1)) + 1 ]);
+      temp->a = points[x+1][y];
+      temp->b = points[x][y+1];
+      temp->c = points[x+1][y+1];
+      temp->color = color;
+
+    }
+  }
+  return triangles;
 }
+
+
 
 void subdivideAdaptive(patch* patch, float step) {
 
@@ -267,9 +328,9 @@ void drawTriangle(triangle *triangle) {
   glBegin(GL_TRIANGLES);
   glColor3f(triangle->color->r, triangle->color->g, triangle->color->b);
 
-  glVertex3f( triangle->a.x, triangle->a.y, triangle->a.z );
-  glVertex3f( triangle->b.x, triangle->b.y, triangle->b.z );
-  glVertex3f( triangle->c.x, triangle->c.y, triangle->c.z );
+  glVertex3f( triangle->a.pos.x, triangle->a.pos.y, triangle->a.pos.z );
+  glVertex3f( triangle->b.pos.x, triangle->b.pos.y, triangle->b.pos.z );
+  glVertex3f( triangle->c.pos.x, triangle->c.pos.y, triangle->c.pos.z );
 
   glEnd();
 }
@@ -288,25 +349,21 @@ void myDisplay() {
             0.0f, 1.0f, 0.0f);    // up vector
 
 
-  //test draw
-  color* blue = (color*)malloc(sizeof(color));
-  blue->r = 0.0f;
-  blue->g = 0.0f;
-  blue->b = 1.0f;
+  
 
   triangle* test = (triangle*)malloc(sizeof(triangle));
 
-  test->a.x = -1.0f;
-  test->a.y = 0.0f;
-  test->a.z = 0.0f;
+  test->a.pos.x = -1.0f;
+  test->a.pos.y = 0.0f;
+  test->a.pos.z = 0.0f;
 
-  test->b.x = 0.0f;
-  test->b.y = -1.0f;
-  test->b.z = 0.0f;
+  test->b.pos.x = 0.0f;
+  test->b.pos.y = -1.0f;
+  test->b.pos.z = 0.0f;
 
-  test->c.x = 0.0f;
-  test->c.y = 1.0f;
-  test->c.z = 0.0f;
+  test->c.pos.x = 0.0f;
+  test->c.pos.y = 1.0f;
+  test->c.pos.z = 0.0f;
 
   test->color = blue;
   
@@ -327,24 +384,49 @@ void myDisplay() {
 // the usual stuff, nothing exciting here
 //****************************************************
 int main(int argc, char *argv[]) {
+
+  //parse in command line arguments
+  if (argc < 3) {
+    perror("prgm must take in at least 2 arguments\n");
+    perror("1st argument: .bez file\n");
+    perror("2nd argument: param constant\n");
+    perror("(optional) 3rd argument: -a (for adaptive)");
+  }
+  char *bezfile = argv[1];
+  float param = stof(argv[2]);
+
+  bool adaptive = false;
+
   //ignore first arg - it is the name of this program
-  int argI = 1;
-  
+  int argI = 3;
   char *argument;
-  //float divideBy = FLT_MAX;
-  float divideBy = 1.0f;
   while(argI < argc) {
     argument = argv[argI++];
-    if (strcmp(argument, "-ka") == 0) {
-      //stuff
-    }
-    else if (strcmp(argument, "-kd") == 0) {
-      //stuff
+    if (strcmp(argument, "-a") == 0) {
+      //turn on 
+      adaptive = true;
     }
     else {
       printf("Unknown argument %s\n", argv[argI++]);
     }
   }
+
+  if (adaptive) {
+    lambda = param;
+  }
+  else {
+    step = param;
+  }
+
+  //read in patch file
+
+  //set up and generate triangles
+  color* blue = (color*)malloc(sizeof(color));
+  blue->r = 0.0f;
+  blue->g = 0.0f;
+  blue->b = 1.0f;
+
+  triangles = subdivideUniform(patch, step, blue);
 
   //This initializes glut
   glutInit(&argc, argv);
