@@ -261,6 +261,7 @@ void bezPatchInterp(point* p, patch* patch, float u, float v) {
   }
   vec3 dPdv;
   vec3 dPdu;
+  // surface derivatives
   bezCurveInterp(&(p->pos), &dPdv, vcurve, v);
   bezCurveInterp(&(p->pos), &dPdu, ucurve, u);
   
@@ -383,11 +384,49 @@ patch* readPatches(char* filename) {
   return 0;
 }
 
+void testBezCurveInterp() {
+  curve temp;
+  temp->points[0].x = 0.0f;
+  temp->points[0].y = 0.0f;
+  temp->points[0].z = 0.0f;
+  
+  temp->points[1].x = 1.0f;
+  temp->points[1].y = 3.0f;
+  temp->points[1].z = 0.0f;
+  
+  temp->points[2].x = 2.0f;
+  temp->points[2].y = 3.0f;
+  temp->points[2].z = 0.0f;
+  
+  temp->points[3].x = 3.0f;
+  temp->points[3].y = 0.0f;
+  temp->points[3].z = 0.0f;
+  
+  vec3 p;
+  vec3 dPdu;
+  for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
+    bezCurveInterp(&p, &dPdu, &temp, 0.0f);
+    cout << "Point: (";
+    cout << p.x << ", ";
+    cout << p.y << ", ";
+    cout << p.z << ")";
+    cout << "Derivative: (";
+    cout << dPdu.x << ", ";
+    cout << dPdu.y << ", ";
+    cout << dPdu.z << ")";
+  }
+}
+
+
 
 //****************************************************
 // the usual stuff, nothing exciting here
 //****************************************************
 int main(int argc, char *argv[]) {
+
+  //test bezCurveInterp
+  testBezCurveInterp();
+
 
   //parse in command line arguments
   if (argc < 3) {
