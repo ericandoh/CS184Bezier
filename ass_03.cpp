@@ -22,6 +22,7 @@
 #include <string.h>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <float.h>
 
 #define PI 3.14159265  // Should be used from mathlib
@@ -107,6 +108,8 @@ float max_subdivisions = 7;
 //the triangles to render
 triangles* triangles;
 
+int triangle_count = 0;
+
 //****************************************************
 // Simple init function
 //****************************************************
@@ -142,6 +145,7 @@ void myReshape(int w, int h) {
 
 void myKeyPressed(unsigned char key, int x, int y) {
   if(key == 32) {
+    cleanup();
     exit(0);
   }
 }
@@ -349,34 +353,34 @@ void myDisplay() {
             0.0f, 1.0f, 0.0f);    // up vector
 
 
-  
-
-  triangle* test = (triangle*)malloc(sizeof(triangle));
-
-  test->a.pos.x = -1.0f;
-  test->a.pos.y = 0.0f;
-  test->a.pos.z = 0.0f;
-
-  test->b.pos.x = 0.0f;
-  test->b.pos.y = -1.0f;
-  test->b.pos.z = 0.0f;
-
-  test->c.pos.x = 0.0f;
-  test->c.pos.y = 1.0f;
-  test->c.pos.z = 0.0f;
-
-  test->color = blue;
-  
-  drawTriangle(test);
-
-  // Start drawing
-  //circle(viewport.w / 2.0 , viewport.h / 2.0 , min(viewport.w, viewport.h) * 0.45f );
-
-  free(blue);
-  free(test);
+  for (int i = 0; i < triangle_count; i++) {
+    drawTriangle(&(triangles[i]));
+  }
 
   glFlush();
   glutSwapBuffers();          // swap buffers (we earlier set double buffer)
+}
+
+void cleanup() {
+  free(blue);
+  free(test);
+}
+patch* readPatches(char* filename) {
+  ofstream bezierfile;
+  bezierfile.open();
+
+  if (bezierfile.is_open()) {
+    string line;
+    while(getline(bezierfile, line)) {
+      cout << line << '\n';
+    }
+    bezierfile.close();
+  }
+  else {
+    cout << "Unable to open file";
+  }
+  
+  return 0;
 }
 
 
@@ -427,6 +431,8 @@ int main(int argc, char *argv[]) {
   blue->b = 1.0f;
 
   triangles = subdivideUniform(patch, step, blue);
+
+  triangle_count = sizeof(triangles) / sizeof(triangle);
 
   //This initializes glut
   glutInit(&argc, argv);
