@@ -402,14 +402,14 @@ void testBezCurveInterp() {
   vec3 dPdu;
   for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
     bezCurveInterp(&p, &dPdu, &temp, 0.0f);
-    cout << "Point:";
-    cout << p.x;
-    cout << p.y;
-    cout << p.z;
-    cout << "Derivative:";
-    cout << dPdu.x;
-    cout << dPdu.y;
-    cout << dPdu.z;
+    cout << "Point: (";
+    cout << p.x << ", ";
+    cout << p.y << ", ";
+    cout << p.z << ")";
+    cout << "Derivative: (";
+    cout << dPdu.x << ", ";
+    cout << dPdu.y << ", ";
+    cout << dPdu.z << ")";
   }
 }
 
