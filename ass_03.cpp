@@ -180,6 +180,18 @@ void bezCurveInterp(vec3 *p, vec3 *dPdu, curve* curve, float u) {
 
 }
 
+void bezPatchInterp(vec3 *p, vec3 *norm, patch* patch, float u, float v) {
+
+}
+
+void subdivideUniform(patch* patch, float step) {
+
+}
+
+void subdivideAdaptive(patch* patch, float step) {
+
+}
+
 
 
 //****************************************************
