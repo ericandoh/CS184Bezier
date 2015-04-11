@@ -163,6 +163,15 @@ void subtract(vec3 *dest, vec3 *a, vec3 *b) {
   dest->z = a->z - b->z;
 }
 
+
+void bezCurveInterp(vec3 *p, vec3 *dPdu, curve* curve, float u) {
+  
+
+
+}
+
+
+
 //****************************************************
 // Draw a random ass triangle 
 //****************************************************
@@ -225,7 +234,6 @@ void myDisplay() {
   glFlush();
   glutSwapBuffers();          // swap buffers (we earlier set double buffer)
 }
-
 
 
 //****************************************************
