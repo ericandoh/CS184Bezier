@@ -106,11 +106,13 @@ float lambda = 0.1f;
 float max_subdivisions = 7;
 
 //the triangles to render
-triangle* triangles;
+triangle** triangles;
 
 color* blue;
+color* red;
 
 int triangle_count = 0;
+int patch_count = 0;
 
 //****************************************************
 // Simple init function
@@ -278,7 +280,6 @@ void bezPatchInterp(point* p, patch* patch, float u, float v) {
 
 triangle* subdivideUniform(patch* patch, float step, color* color) {
   //performs uniform subdivision
-
   //temp variables u, v
   float u, v;
 
@@ -300,20 +301,21 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
 
   //now generate triangle array from our buffer of points
   //2 triangles per quad
-  triangles = (triangle*) malloc(2*(numdiv-1)*(numdiv-1) * sizeof(triangle));
+  triangle* my_triangles = (triangle*) malloc(2*(numdiv-1)*(numdiv-1) * sizeof(triangle));
+  triangle_count = 2*(numdiv-1)*(numdiv-1);
   triangle* temp;
   for (int x = 0; x < numdiv - 1; x++) {
     for (int y = 0; y < numdiv - 1; y++) {
       
       //first triangle
-      temp = &(triangles[ 2*(y+x*(numdiv-1)) ]);
+      temp = &(my_triangles[ 2*(y+x*(numdiv-1)) ]);
       temp->a = points[x][y];
       temp->b = points[x][y+1];
       temp->c = points[x+1][y];
       temp->color = color;
 
       //second triangle
-      temp = &(triangles[ 2*(y+x*(numdiv-1)) + 1 ]);
+      temp = &(my_triangles[ 2*(y+x*(numdiv-1)) + 1 ]);
       temp->a = points[x+1][y];
       temp->b = points[x][y+1];
       temp->c = points[x+1][y+1];
@@ -321,7 +323,7 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
 
     }
   }
-  return triangles;
+  return my_triangles;
 }
 
 
@@ -344,6 +346,11 @@ void drawTriangle(triangle *triangle) {
   glVertex3f( triangle->b.pos.x, triangle->b.pos.y, triangle->b.pos.z );
   glVertex3f( triangle->c.pos.x, triangle->c.pos.y, triangle->c.pos.z );
 
+  /*cout<<"triangle";
+  cout << triangle->a.pos.x << triangle->a.pos.y << triangle->a.pos.z;
+  cout << triangle->b.pos.x << triangle->b.pos.y << triangle->b.pos.z;
+  cout << triangle->c.pos.x << triangle->c.pos.y << triangle->c.pos.z;*/
+
   glEnd();
 }
 
@@ -356,13 +363,14 @@ void myDisplay() {
 
   glMatrixMode(GL_MODELVIEW);             // indicate we are specifying camera transformations
   glLoadIdentity();               // make sure transformation is "zero'd"
-  gluLookAt(0.0f, 0.0f, -4.0f,     // eye position
+  gluLookAt(0.0f, -10.0f, 10.0f,     // eye position
             0.0f, 0.0f, 0.0f,     // where to look at
             0.0f, 1.0f, 0.0f);    // up vector
 
-
-  for (int i = 0; i < triangle_count; i++) {
-    drawTriangle(&(triangles[i]));
+  for (int x = 0; x < patch_count; x++) {
+    for (int i = 0; i < triangle_count; i++) {
+      drawTriangle(&(triangles[x][i]));
+    }
   }
 
   glFlush();
@@ -373,6 +381,8 @@ patch* readPatches(char* filename) {
   std::ifstream bezierfile;
   bezierfile.open(filename);
 
+  patch* patches;
+
   if (bezierfile.is_open()) {
     string line;
     char* word;
@@ -380,38 +390,42 @@ patch* readPatches(char* filename) {
     int count = 0;
     int subcount = 0;
     int currentPatch = 0;
+    int curveCount = 0;
+    int patchcount;
     while( getline(bezierfile, line) ) {
       if (count == 0) {
-        int patchcount = stoi(line);
-        patch* patches = (patch*)malloc(sizeof(patch)*patchcount);
+        patchcount = stoi(line);
+        patch_count = patchcount;
+        patches = (patch*)malloc(sizeof(patch)*patchcount);
       }
       else {
-        if (count % 5 == 1 ) {
+        if (count % 5 == 0 ) {
           //skip this line
         }
         else {
-
-          currentPatch = (count - 1) / 5;
+          currentPatch = (count) / 5;
+          curveCount = (count - 1) % 5;
+          if (currentPatch >= patchcount) {
+            break;
+          }
 
           cline = (char*)line.c_str();
           word = strtok (cline, " ");
           subcount = 0;
-          while(word != NULL && subcount < 30) {
-            if (subcount < 4) {
-              
+          while(word != NULL && subcount < 12) {
+            if (subcount % 3 == 0) {
+              //cout << currentPatch << "/" << curveCount << "/" << subcount / 3 << "/x " << stof(word) << "\n";
+              patches[currentPatch].curves[curveCount].points[subcount / 3].x = stof(word);
             }
-            else if (subcount < 8) {
-
-            }
-            else if (subcount < 12) {
-
+            else if (subcount % 3 == 1) {
+              //cout << currentPatch << "/" << curveCount << "/" << subcount / 3 << "/y " << stof(word) << "\n";
+              patches[currentPatch].curves[curveCount].points[subcount / 3].y = stof(word);
             }
             else {
-
+              //cout << currentPatch << "/" << curveCount << "/" << subcount / 3 << "/z " << stof(word) << "\n";
+              patches[currentPatch].curves[curveCount].points[subcount / 3].z = stof(word);
             }
-            stof(word);
-
-            cout << subcount << "/" << word << "\n";
+            //cout << subcount << "/" << word << "\n";
             subcount++;
             word = strtok(NULL, " ");
           }
@@ -425,7 +439,7 @@ patch* readPatches(char* filename) {
     cout << "Unable to open file";
   }
   
-  return 0;
+  return patches;
 }
 
 void testBezCurveInterp() {
@@ -531,14 +545,14 @@ void testBezPatchInterp() {
   patch.curves[3].points[3].z = 0.0f;
 
   point p;
-  for(float i = 0.0f; i <= 1.0f; i += 0.33f) {
-    for(float j = 0.0f; j <= 1.0f; j += 0.33f) {
+  for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
+    for(float j = 0.0f; j <= 1.0f; j += 0.2f) {
       bezPatchInterp(&p, &patch, i, j);
       //cout << "Point: (";
       cout << "[";
       cout << p.pos.x << ", ";
       cout << p.pos.y << ", ";
-      cout << p.pos.z << ")\n";
+      cout << p.pos.z << "],";
       /*cout << "Normal: (";
       cout << p.norm.x << ", ";
       cout << p.norm.y << ", ";
@@ -554,10 +568,10 @@ void testBezPatchInterp() {
 int main(int argc, char *argv[]) {
 
   //test bezCurveInterp
-  testBezCurveInterp();
+  //testBezCurveInterp();
   
   //test bezPatchInterp
-  testBezPatchInterp();
+  //testBezPatchInterp();
   
   
 
@@ -595,6 +609,8 @@ int main(int argc, char *argv[]) {
     step = param;
   }
 
+  cout << "reading\n";
+
   //read in patch file
   patch* patches = readPatches(bezfile);
 
@@ -604,12 +620,29 @@ int main(int argc, char *argv[]) {
   blue->g = 0.0f;
   blue->b = 1.0f;
 
-  exit(0);
+  red = (color*)malloc(sizeof(color));
+  red->r = 1.0f;
+  red->g = 0.0f;
+  red->b = 0.0f;
 
+  
   cout << "This needs work - go through all patches + amalgate traingels\n";
-  triangles = subdivideUniform(NULL, step, blue);
 
-  triangle_count = sizeof(triangles) / sizeof(triangle);
+  triangles = (triangle**) malloc(sizeof(triangle*) * patch_count);
+
+  for (int i = 0; i < patch_count; i++) {
+    if (i % 2 == 0) {
+      triangles[i] = subdivideUniform(&(patches[i]), step, blue);
+    }
+    else {
+      triangles[i] = subdivideUniform(&(patches[i]), step, red);
+    }
+  }
+
+  //triangle_count = sizeof(*triangles) / sizeof(triangle);
+
+
+  cout << "Making triangles" << triangle_count << "\n";
 
   //This initializes glut
   glutInit(&argc, argv);
