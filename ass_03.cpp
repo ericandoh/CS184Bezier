@@ -379,19 +379,42 @@ patch* readPatches(char* filename) {
     char* cline;
     int count = 0;
     int subcount = 0;
+    int currentPatch = 0;
     while( getline(bezierfile, line) ) {
       if (count == 0) {
         int patchcount = stoi(line);
         patch* patches = (patch*)malloc(sizeof(patch)*patchcount);
       }
       else {
-        cline = (char*)line.c_str();
-        word = strtok (cline, " ");
-        subcount = 0;
-        while(word != NULL && subcount < 30) {
-          cout << subcount << "/" << word << "\n";
-          subcount++;
-          word = strtok(NULL, " ");
+        if (count % 5 == 1 ) {
+          //skip this line
+        }
+        else {
+
+          currentPatch = (count - 1) / 5;
+
+          cline = (char*)line.c_str();
+          word = strtok (cline, " ");
+          subcount = 0;
+          while(word != NULL && subcount < 30) {
+            if (subcount < 4) {
+              
+            }
+            else if (subcount < 8) {
+
+            }
+            else if (subcount < 12) {
+
+            }
+            else {
+
+            }
+            stof(word);
+
+            cout << subcount << "/" << word << "\n";
+            subcount++;
+            word = strtok(NULL, " ");
+          }
         }
       }
       count++;
@@ -508,17 +531,19 @@ void testBezPatchInterp() {
   patch.curves[3].points[3].z = 0.0f;
 
   point p;
-  for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
-    for(float j = 0.0f; j <= 1.0f; j += 0.2f) {
+  for(float i = 0.0f; i <= 1.0f; i += 0.33f) {
+    for(float j = 0.0f; j <= 1.0f; j += 0.33f) {
       bezPatchInterp(&p, &patch, i, j);
-      cout << "Point: (";
+      //cout << "Point: (";
+      cout << "[";
       cout << p.pos.x << ", ";
       cout << p.pos.y << ", ";
-      cout << p.pos.z << ")\n";
-      cout << "Normal: (";
+      cout << p.pos.z << "],";
+      //cout << p.pos.z << ")\n";
+      /*cout << "Normal: (";
       cout << p.norm.x << ", ";
       cout << p.norm.y << ", ";
-      cout << p.norm.z << ")\n";
+      cout << p.norm.z << ")\n";*/
     }
   }
 }
