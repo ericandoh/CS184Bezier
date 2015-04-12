@@ -429,11 +429,11 @@ void testBezPatchInterp() {
   
   patch.curves[0].points[1].x = 0.0f;
   patch.curves[0].points[1].y = 1.0f;
-  patch.curves[0].points[1].z = 3.0f;
+  patch.curves[0].points[1].z = 0.0f;
   
   patch.curves[0].points[2].x = 0.0f;
   patch.curves[0].points[2].y = 2.0f;
-  patch.curves[0].points[2].z = 3.0f;
+  patch.curves[0].points[2].z = 0.0f;
 
   patch.curves[0].points[3].x = 0.0f;
   patch.curves[0].points[3].y = 3.0f;
@@ -463,11 +463,11 @@ void testBezPatchInterp() {
   
   patch.curves[2].points[1].x = 2.0f;
   patch.curves[2].points[1].y = 1.0f;
-  patch.curves[2].points[1].z = 3.0f;
+  patch.curves[2].points[1].z = 4.0f;
   
   patch.curves[2].points[2].x = 2.0f;
   patch.curves[2].points[2].y = 2.0f;
-  patch.curves[2].points[2].z = 3.0f;
+  patch.curves[2].points[2].z = 5.0f;
 
   patch.curves[2].points[3].x = 2.0f;
   patch.curves[2].points[3].y = 3.0f;
@@ -480,11 +480,11 @@ void testBezPatchInterp() {
   
   patch.curves[3].points[1].x = 3.0f;
   patch.curves[3].points[1].y = 1.0f;
-  patch.curves[3].points[1].z = 3.0f;
+  patch.curves[3].points[1].z = 0.0f;
   
   patch.curves[3].points[2].x = 3.0f;
   patch.curves[3].points[2].y = 2.0f;
-  patch.curves[3].points[2].z = 3.0f;
+  patch.curves[3].points[2].z = 0.0f;
 
   patch.curves[3].points[3].x = 3.0f;
   patch.curves[3].points[3].y = 3.0f;
@@ -498,10 +498,10 @@ void testBezPatchInterp() {
       cout << p.pos.x << ", ";
       cout << p.pos.y << ", ";
       cout << p.pos.z << ")\n";
-      cout << "Normal: (";
+      /*cout << "Normal: (";
       cout << p.norm.x << ", ";
       cout << p.norm.y << ", ";
-      cout << p.norm.z << ")\n";
+      cout << p.norm.z << ")\n";*/
     }
   }
 }
