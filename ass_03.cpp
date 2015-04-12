@@ -438,6 +438,90 @@ void testBezCurveInterp() {
   }
 }
 
+void testBezPatchInterp() {
+  patch patch;
+  patch.curves[0].points[0].x = 0.0f;
+  patch.curves[0].points[0].y = 0.0f;
+  patch.curves[0].points[0].z = 0.0f;
+  
+  patch.curves[0].points[1].x = 0.0f;
+  patch.curves[0].points[1].y = 1.0f;
+  patch.curves[0].points[1].z = 3.0f;
+  
+  patch.curves[0].points[2].x = 0.0f;
+  patch.curves[0].points[2].y = 2.0f;
+  patch.curves[0].points[2].z = 3.0f;
+
+  patch.curves[0].points[3].x = 0.0f;
+  patch.curves[0].points[3].y = 3.0f;
+  patch.curves[0].points[3].z = 0.0f;
+
+  
+  patch.curves[1].points[0].x = 1.0f;
+  patch.curves[1].points[0].y = 0.0f;
+  patch.curves[1].points[0].z = 0.0f;
+  
+  patch.curves[1].points[1].x = 1.0f;
+  patch.curves[1].points[1].y = 1.0f;
+  patch.curves[1].points[1].z = 3.0f;
+  
+  patch.curves[1].points[2].x = 1.0f;
+  patch.curves[1].points[2].y = 2.0f;
+  patch.curves[1].points[2].z = 3.0f;
+
+  patch.curves[1].points[3].x = 1.0f;
+  patch.curves[1].points[3].y = 3.0f;
+  patch.curves[1].points[3].z = 0.0f;
+ 
+
+  patch.curves[2].points[0].x = 2.0f;
+  patch.curves[2].points[0].y = 0.0f;
+  patch.curves[2].points[0].z = 0.0f;
+  
+  patch.curves[2].points[1].x = 2.0f;
+  patch.curves[2].points[1].y = 1.0f;
+  patch.curves[2].points[1].z = 3.0f;
+  
+  patch.curves[2].points[2].x = 2.0f;
+  patch.curves[2].points[2].y = 2.0f;
+  patch.curves[2].points[2].z = 3.0f;
+
+  patch.curves[2].points[3].x = 2.0f;
+  patch.curves[2].points[3].y = 3.0f;
+  patch.curves[2].points[3].z = 0.0f;
+
+
+  patch.curves[3].points[0].x = 3.0f;
+  patch.curves[3].points[0].y = 0.0f;
+  patch.curves[3].points[0].z = 0.0f;
+  
+  patch.curves[3].points[1].x = 3.0f;
+  patch.curves[3].points[1].y = 1.0f;
+  patch.curves[3].points[1].z = 3.0f;
+  
+  patch.curves[3].points[2].x = 3.0f;
+  patch.curves[3].points[2].y = 2.0f;
+  patch.curves[3].points[2].z = 3.0f;
+
+  patch.curves[3].points[3].x = 3.0f;
+  patch.curves[3].points[3].y = 3.0f;
+  patch.curves[3].points[3].z = 0.0f;
+
+  point p;
+  for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
+    for(float j = 0.0f; j <= 1.0f; j += 0.2f) {
+      bezPatchInterp(&p, &patch, i, j);
+      cout << "Point: (";
+      cout << p.pos.x << ", ";
+      cout << p.pos.y << ", ";
+      cout << p.pos.z << ")\n";
+      cout << "Normal: (";
+      cout << p.norm.x << ", ";
+      cout << p.norm.y << ", ";
+      cout << p.norm.z << ")\n";
+    }
+  }
+}
 
 
 //****************************************************
@@ -447,7 +531,11 @@ int main(int argc, char *argv[]) {
 
   //test bezCurveInterp
   testBezCurveInterp();
-
+  
+  //test bezPatchInterp
+  testBezPatchInterp();
+  
+  
 
   //parse in command line arguments
   if (argc < 3) {
