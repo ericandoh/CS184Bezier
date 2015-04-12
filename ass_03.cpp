@@ -106,7 +106,9 @@ float lambda = 0.1f;
 float max_subdivisions = 7;
 
 //the triangles to render
-triangles* triangles;
+triangle* triangles;
+
+color* blue;
 
 int triangle_count = 0;
 
@@ -123,6 +125,11 @@ void initScene() {
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 }
 
+
+void cleanup() {
+  free(blue);
+  free(triangles);
+}
 
 //****************************************************
 // reshape viewport if the window is resized
@@ -240,7 +247,7 @@ void bezCurveInterp(vec3* p, vec3* dPdu, curve* curve, float u) {
   add(&e, &temp1, &temp2);
   // get p
   scale(&temp1, &d, 1.0f - u);
-  scale(temp2, &e, u);
+  scale(&temp2, &e, u);
   add(p, &temp1, &temp2);
   // get dPdu
   subtract(&temp1, &e, &d);
@@ -251,19 +258,19 @@ void bezPatchInterp(point* p, patch* patch, float u, float v) {
   curve vcurve;
   curve ucurve;
   vec3 temp;
+  curve tempCurve;
   for(int i = 0; i <= 3; i++) {
-    bezCurveInterp(&(vcurve->points[i]), &temp, &(patch->curves[i]), u);
-    curve tempCurve;
+    bezCurveInterp(&(vcurve.points[i]), &temp, &(patch->curves[i]), u);
     for(int j = 0; j <= 3; j++) {
-      set(&(tempCurve->points[j]), &(patch->curves[j].points[i]));
+      set(&(tempCurve.points[j]), &(patch->curves[j].points[i]));
     }
-    bezCurveInterp(&(ucurve->points[i]), &temp, &tempCurve, v);
+    bezCurveInterp(&(ucurve.points[i]), &temp, &tempCurve, v);
   }
   vec3 dPdv;
   vec3 dPdu;
   // surface derivatives
-  bezCurveInterp(&(p->pos), &dPdv, vcurve, v);
-  bezCurveInterp(&(p->pos), &dPdu, ucurve, u);
+  bezCurveInterp(&(p->pos), &dPdv, &vcurve, v);
+  bezCurveInterp(&(p->pos), &dPdu, &ucurve, u);
   
   crossProduct(&(p->norm), &dPdu, &dPdv);
   normalize(&(p->norm));
@@ -287,7 +294,7 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
     for (int iv = 0; iv < numdiv; iv++) {
       v = iv * step;
       //evaluate surface
-      bezPatchInterp(&(point[iu][iv]), patch, u, v);
+      bezPatchInterp(&(points[iu][iv]), patch, u, v);
     }
   }
 
@@ -303,7 +310,7 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
       temp->a = points[x][y];
       temp->b = points[x][y+1];
       temp->c = points[x+1][y];
-      temp->color = color
+      temp->color = color;
 
       //second triangle
       temp = &(triangles[ 2*(y+x*(numdiv-1)) + 1 ]);
@@ -362,12 +369,9 @@ void myDisplay() {
   glutSwapBuffers();          // swap buffers (we earlier set double buffer)
 }
 
-void cleanup() {
-  free(blue);
-  free(test);
-}
 patch* readPatches(char* filename) {
-  ofstream bezierfile;
+  /*
+  std::ofstream bezierfile;
   bezierfile.open();
 
   if (bezierfile.is_open()) {
@@ -380,40 +384,40 @@ patch* readPatches(char* filename) {
   else {
     cout << "Unable to open file";
   }
-  
+  */
   return 0;
 }
 
 void testBezCurveInterp() {
   curve temp;
-  temp->points[0].x = 0.0f;
-  temp->points[0].y = 0.0f;
-  temp->points[0].z = 0.0f;
+  temp.points[0].x = 0.0f;
+  temp.points[0].y = 0.0f;
+  temp.points[0].z = 0.0f;
   
-  temp->points[1].x = 1.0f;
-  temp->points[1].y = 3.0f;
-  temp->points[1].z = 0.0f;
+  temp.points[1].x = 1.0f;
+  temp.points[1].y = 3.0f;
+  temp.points[1].z = 0.0f;
   
-  temp->points[2].x = 2.0f;
-  temp->points[2].y = 3.0f;
-  temp->points[2].z = 0.0f;
+  temp.points[2].x = 2.0f;
+  temp.points[2].y = 3.0f;
+  temp.points[2].z = 0.0f;
   
-  temp->points[3].x = 3.0f;
-  temp->points[3].y = 0.0f;
-  temp->points[3].z = 0.0f;
+  temp.points[3].x = 3.0f;
+  temp.points[3].y = 0.0f;
+  temp.points[3].z = 0.0f;
   
   vec3 p;
   vec3 dPdu;
   for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
-    bezCurveInterp(&p, &dPdu, &temp, 0.0f);
+    bezCurveInterp(&p, &dPdu, &temp, i);
     cout << "Point: (";
-    cout << p.x << ", ";
-    cout << p.y << ", ";
-    cout << p.z << ")";
+    cout << to_string(p.x) << ", ";
+    cout << to_string(p.y) << ", ";
+    cout << to_string(p.z) << ")\n";
     cout << "Derivative: (";
-    cout << dPdu.x << ", ";
-    cout << dPdu.y << ", ";
-    cout << dPdu.z << ")";
+    cout << to_string(dPdu.x) << ", ";
+    cout << to_string(dPdu.y) << ", ";
+    cout << to_string(dPdu.z) << ")\n";
   }
 }
 
@@ -430,10 +434,11 @@ int main(int argc, char *argv[]) {
 
   //parse in command line arguments
   if (argc < 3) {
-    perror("prgm must take in at least 2 arguments\n");
-    perror("1st argument: .bez file\n");
-    perror("2nd argument: param constant\n");
-    perror("(optional) 3rd argument: -a (for adaptive)");
+    cout << "prgm must take in at least 2 arguments\n";
+    cout << "1st argument: .bez file\n";
+    cout << "2nd argument: param constant\n";
+    cout << "(optional) 3rd argument: -a (for adaptive)";
+    exit(0);
   }
   char *bezfile = argv[1];
   float param = stof(argv[2]);
@@ -462,14 +467,16 @@ int main(int argc, char *argv[]) {
   }
 
   //read in patch file
+  patch* patches = readPatches(bezfile);
 
   //set up and generate triangles
-  color* blue = (color*)malloc(sizeof(color));
+  blue = (color*)malloc(sizeof(color));
   blue->r = 0.0f;
   blue->g = 0.0f;
   blue->b = 1.0f;
 
-  triangles = subdivideUniform(patch, step, blue);
+  cout << "This needs work - go through all patches + amalgate traingels\n";
+  triangles = subdivideUniform(NULL, step, blue);
 
   triangle_count = sizeof(triangles) / sizeof(triangle);
 
