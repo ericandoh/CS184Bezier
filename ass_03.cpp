@@ -370,21 +370,38 @@ void myDisplay() {
 }
 
 patch* readPatches(char* filename) {
-  /*
-  std::ofstream bezierfile;
-  bezierfile.open();
+  std::ifstream bezierfile;
+  bezierfile.open(filename);
 
   if (bezierfile.is_open()) {
     string line;
-    while(getline(bezierfile, line)) {
-      cout << line << '\n';
+    char* word;
+    char* cline;
+    int count = 0;
+    int subcount = 0;
+    while( getline(bezierfile, line) ) {
+      if (count == 0) {
+        int patchcount = stoi(line);
+        patch* patches = (patch*)malloc(sizeof(patch)*patchcount);
+      }
+      else {
+        cline = (char*)line.c_str();
+        word = strtok (cline, " ");
+        subcount = 0;
+        while(word != NULL && subcount < 30) {
+          cout << subcount << "/" << word << "\n";
+          subcount++;
+          word = strtok(NULL, " ");
+        }
+      }
+      count++;
     }
     bezierfile.close();
   }
   else {
     cout << "Unable to open file";
   }
-  */
+  
   return 0;
 }
 
@@ -411,13 +428,13 @@ void testBezCurveInterp() {
   for(float i = 0.0f; i <= 1.0f; i += 0.2f) {
     bezCurveInterp(&p, &dPdu, &temp, i);
     cout << "Point: (";
-    cout << to_string(p.x) << ", ";
-    cout << to_string(p.y) << ", ";
-    cout << to_string(p.z) << ")\n";
+    cout << p.x << ", ";
+    cout << p.y << ", ";
+    cout << p.z << ")\n";
     cout << "Derivative: (";
-    cout << to_string(dPdu.x) << ", ";
-    cout << to_string(dPdu.y) << ", ";
-    cout << to_string(dPdu.z) << ")\n";
+    cout << dPdu.x << ", ";
+    cout << dPdu.y << ", ";
+    cout << dPdu.z << ")\n";
   }
 }
 
@@ -474,6 +491,8 @@ int main(int argc, char *argv[]) {
   blue->r = 0.0f;
   blue->g = 0.0f;
   blue->b = 1.0f;
+
+  exit(0);
 
   cout << "This needs work - go through all patches + amalgate traingels\n";
   triangles = subdivideUniform(NULL, step, blue);
