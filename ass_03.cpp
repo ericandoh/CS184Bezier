@@ -114,6 +114,12 @@ color* red;
 int triangle_count = 0;
 int patch_count = 0;
 
+bool isSmooth = true;
+bool isWireframe = false;
+
+
+void myDisplay();
+
 //****************************************************
 // Simple init function
 //****************************************************
@@ -157,6 +163,25 @@ void myKeyPressed(unsigned char key, int x, int y) {
     cleanup();
     exit(0);
   }
+  else if (key == 's') {
+    isSmooth = !isSmooth;
+    if (isSmooth) {
+      glShadeModel(GL_SMOOTH);
+    }
+    else {
+      glShadeModel(GL_FLAT);
+    }
+  }
+  else if (key == 'w') {
+    isWireframe = !isWireframe;
+    if (isWireframe) {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+  }
+  myDisplay();
 }
 
 
