@@ -285,7 +285,8 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
 
   //round a small bit to account for rounding error
   //number of subdivisions
-  int numdiv = (int) (1.0001f / step);
+  int numdiv = (int) (1.000f / step);
+  numdiv += 1;
 
   //buffer to store points
   point points[numdiv][numdiv];
@@ -341,9 +342,11 @@ void subdivideAdaptive(patch* patch, float step) {
 void drawTriangle(triangle *triangle) {
   glBegin(GL_TRIANGLES);
   glColor3f(triangle->color->r, triangle->color->g, triangle->color->b);
-
+  glNormal3f( triangle->a.norm.x, triangle->a.norm.y, triangle->a.norm.z );
   glVertex3f( triangle->a.pos.x, triangle->a.pos.y, triangle->a.pos.z );
+  glNormal3f( triangle->b.norm.x, triangle->b.norm.y, triangle->b.norm.z );
   glVertex3f( triangle->b.pos.x, triangle->b.pos.y, triangle->b.pos.z );
+  glNormal3f( triangle->c.norm.x, triangle->c.norm.y, triangle->c.norm.z );
   glVertex3f( triangle->c.pos.x, triangle->c.pos.y, triangle->c.pos.z );
 
   /*cout<<"triangle";
