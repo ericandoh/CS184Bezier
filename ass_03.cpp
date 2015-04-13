@@ -26,7 +26,6 @@
 #include <float.h>
 
 #define PI 3.14159265  // Should be used from mathlib
-#define COLOR_MAX 255
 
 inline float sqr(float x) { return x*x; }
 
@@ -117,9 +116,9 @@ int patch_count = 0;
 bool isSmooth = true;
 bool isWireframe = false;
 
-float xpos = 0.0f;
-float ypos = 0.0f;  //-5
-float zpos = 10.0f;
+float vdistance = 6.0f;
+float angle = 0.0f;
+float angle_change = 2*PI / 30.0f;
 
 
 void myDisplay();
@@ -218,16 +217,18 @@ void myKeyPressed(unsigned char key, int x, int y) {
 void mySpecialInput(int key, int x, int y) {
   switch(key) {
     case GLUT_KEY_UP:
-      zpos += 1;
+      vdistance -= 1;
+      if (vdistance < 0)
+        vdistance = 0;
       break;
     case GLUT_KEY_DOWN:
-      zpos -= 1;
+      vdistance += 1;
       break;
     case GLUT_KEY_LEFT:
-      xpos += 1;
+      angle = fmod((angle + angle_change), 2*PI);
       break;
     case GLUT_KEY_RIGHT:
-      xpos -= 1;
+      angle = fmod((angle - angle_change), 2*PI);
       break;
   }
   myDisplay();
@@ -437,6 +438,11 @@ void myDisplay() {
 
   glMatrixMode(GL_MODELVIEW);             // indicate we are specifying camera transformations
   glLoadIdentity();               // make sure transformation is "zero'd"
+
+  float xpos = vdistance * cos(angle);
+  float ypos = 0.0f;
+  float zpos = vdistance * sin(angle);
+
   gluLookAt(xpos, ypos, zpos,     // eye position
             0.0f, 0.0f, 0.0f,     // where to look at
             0.0f, 1.0f, 0.0f);    // up vector
