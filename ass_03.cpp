@@ -117,6 +117,10 @@ int patch_count = 0;
 bool isSmooth = true;
 bool isWireframe = false;
 
+float xpos = 0.0f;
+float ypos = 0.0f;  //-5
+float zpos = 10.0f;
+
 
 void myDisplay();
 
@@ -127,10 +131,36 @@ void initScene() {
   // 3D setup - shamelessly stolen from https://www3.ntu.edu.sg/home/ehchua/programming/opengl/CG_Examples.html
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClearDepth(1.0f);
+
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
+  //glDepthFunc(GL_LESS);
   glShadeModel(GL_SMOOTH);
+
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+  //setup materials
+  GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0 };
+  GLfloat mat_specular[] = { 1.0, 1.0, 1.0 };
+  GLfloat mat_shininess[] = { 50.0 };
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+  //setup lights
+  GLfloat ambientLight[] = {0.1, 0.1, 0.1};
+  GLfloat diffuseLight[] = {1.0, 1.0, 1.0};
+  GLfloat specularLight[] = {1.0, 1.0, 1.0};
+  GLfloat light_position[] = { -3.0, 3.0, 3.0, 0.0 };
+
+  glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
+
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
 }
 
 
@@ -184,6 +214,24 @@ void myKeyPressed(unsigned char key, int x, int y) {
   myDisplay();
 }
 
+
+void mySpecialInput(int key, int x, int y) {
+  switch(key) {
+    case GLUT_KEY_UP:
+      zpos += 1;
+      break;
+    case GLUT_KEY_DOWN:
+      zpos -= 1;
+      break;
+    case GLUT_KEY_LEFT:
+      xpos += 1;
+      break;
+    case GLUT_KEY_RIGHT:
+      xpos -= 1;
+      break;
+  }
+  myDisplay();
+}
 
 //****************************************************
 // A routine to set a pixel by drawing a GL point.  This is not a
@@ -366,18 +414,16 @@ void subdivideAdaptive(patch* patch, float step) {
 
 void drawTriangle(triangle *triangle) {
   glBegin(GL_TRIANGLES);
-  glColor3f(triangle->color->r, triangle->color->g, triangle->color->b);
+
+  //glColor3f(triangle->color->r, triangle->color->g, triangle->color->b);
+
   glNormal3f( triangle->a.norm.x, triangle->a.norm.y, triangle->a.norm.z );
   glVertex3f( triangle->a.pos.x, triangle->a.pos.y, triangle->a.pos.z );
   glNormal3f( triangle->b.norm.x, triangle->b.norm.y, triangle->b.norm.z );
   glVertex3f( triangle->b.pos.x, triangle->b.pos.y, triangle->b.pos.z );
   glNormal3f( triangle->c.norm.x, triangle->c.norm.y, triangle->c.norm.z );
   glVertex3f( triangle->c.pos.x, triangle->c.pos.y, triangle->c.pos.z );
-
-  /*cout<<"triangle";
-  cout << triangle->a.pos.x << triangle->a.pos.y << triangle->a.pos.z;
-  cout << triangle->b.pos.x << triangle->b.pos.y << triangle->b.pos.z;
-  cout << triangle->c.pos.x << triangle->c.pos.y << triangle->c.pos.z;*/
+  
 
   glEnd();
 }
@@ -387,11 +433,11 @@ void drawTriangle(triangle *triangle) {
 //***************************************************
 void myDisplay() {
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       // clear the color buffer
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);             // indicate we are specifying camera transformations
   glLoadIdentity();               // make sure transformation is "zero'd"
-  gluLookAt(0.0f, -10.0f, 10.0f,     // eye position
+  gluLookAt(xpos, ypos, zpos,     // eye position
             0.0f, 0.0f, 0.0f,     // where to look at
             0.0f, 1.0f, 0.0f);    // up vector
 
@@ -676,11 +722,11 @@ int main(int argc, char *argv[]) {
   glutInit(&argc, argv);
 
   //This tells glut to use a double-buffered window with red, green, and blue channels 
-  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
   // Initalize theviewport size
-  viewport.w = 400;
-  viewport.h = 400;
+  viewport.w = 700;
+  viewport.h = 700;
 
   //The size and position of the window
   glutInitWindowSize(viewport.w, viewport.h);
@@ -692,6 +738,7 @@ int main(int argc, char *argv[]) {
   glutDisplayFunc(myDisplay);       // function to run when its time to draw something
   glutReshapeFunc(myReshape);       // function to run when the window gets resized
   glutKeyboardFunc(myKeyPressed);
+  glutSpecialFunc(mySpecialInput);
 
   glutMainLoop();             // infinite loop that will keep drawing and resizing
   // and whatever else
