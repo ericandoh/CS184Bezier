@@ -589,12 +589,12 @@ void myDisplay() {
   glLoadIdentity();               // make sure transformation is "zero'd"
 
   float xpos = vdistance * cos(angle);
-  float ypos = 0.0f;
+  float ypos = 3.0f;
   float zpos = vdistance * sin(angle);
 
-  gluLookAt(xpos, ypos, zpos,     // eye position
+  gluLookAt(xpos, zpos, ypos,     // eye position
             0.0f, 0.0f, 0.0f,     // where to look at
-            0.0f, 1.0f, 0.0f);    // up vector
+            0.0f, 0.0f, 1.0f);    // up vector
 
   for (int x = 0; x < patch_count; x++) {
     for (int i = 0; i < triangle_counts[x]; i++) {
