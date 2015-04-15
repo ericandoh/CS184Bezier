@@ -24,6 +24,7 @@
 #include <iostream>
 #include <fstream>
 #include <float.h>
+#include <vector>
 
 #define PI 3.14159265  // Should be used from mathlib
 
@@ -102,7 +103,7 @@ float step = 0.1f;
 //lambda (max error), for adaptive tessellation
 float lambda = 0.1f;
 //max subdivision depth, for adaptive tessellation
-float max_subdivisions = 7;
+int max_subdivisions = 7;
 
 //the triangles to render
 triangle** triangles;
@@ -120,6 +121,7 @@ float vdistance = 6.0f;
 float angle = 0.0f;
 float angle_change = 2*PI / 30.0f;
 
+std::vector<triangle> adaptiveTriangleList;
 
 void myDisplay();
 
@@ -293,6 +295,10 @@ void crossProduct(vec3* dest, vec3* first, vec3* second) {
   dest->z = first->x * second->y - first->y * second->x;
 }
 
+void float magnitude(vec3* a) {
+  return sqrt(a->x * a->x + a->y * a->y + a->z * a->z);
+}
+
 void bezCurveInterp(vec3* p, vec3* dPdu, curve* curve, float u) {
   vec3 a;
   vec3 b;
@@ -401,10 +407,148 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
   return my_triangles;
 }
 
+triangle* subdivideAdaptive(patch* patch) {
+  subdivideAdaptiveTriangle(patch, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, max_subdivisions);
+  subdivideAdaptiveTriangle(patch, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, max_subdivisions);
+  triangle_count = adaptiveTriangleList.size();
+  triangle* my_triangles = (triangle*) malloc(triangle_count* sizeof(triangle));
+  for(int i = 0; i < triangle_count; i++) {
+    my_triangles[i] = triangle_count.at(i);
+  }
+  return my_triangles;
+}
 
+void subdivideAdaptiveTriangle(patch* patch, float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, int depth) {
+  point p;
+  vec3 x1; vec3 x1norm;
+  vec3 x2; vec3 x2norm;
+  vec3 x3; vec3 x3norm;
+  bool e1;
+  bool e2;
+  bool e3;
+  
+  // get x1 x2 and x3
+  bezPatchInterp(&p, patch, u1x, u1y);
+  set(&x1, &(p.pos));
+  set(&x1norm, &(p.norm));
+  bezPatchInterp(&p, patch, u2x, u2y);
+  set(&x2, &(p.pos));
+  set(&x2norm, &(p.norm));
+  bezPatchInterp(&p, patch, u3x, u3y);
+  set(&x3, &(p.pos));
+  set(&x3norm, &(p.norm));
+  
+  if(depth == 0) { // base case, create a triangle and add it to the arraylist
+    triangle temp;
+    set(&(temp.a.pos), &x1);
+    set(&(temp.a.norm), &x1norm);
+    
+    set(&(temp.b.pos), &x2);
+    set(&(temp.b.norm), &x2norm);
+    
+    set(&(temp.c.pos), &x3);
+    set(&(temp.c.norm), &x3norm);
+    
+    temp.color = color;
+    adaptiveTriangleList.push_back(temp);
+    return;
+  }
+  
+  float xave;
+  float yave;
+  // x1 x2 test
+  xave = (u1x + u2x) / 2;
+  yave = (u1y + u2y) / 2;
+  e2 = adaptiveTest(patch, xave, yave, &x1, &x2);
+  
+  // x1 x3 test
+  xave = (u1x + u3x) / 2;
+  yave = (u1y + y3y) / 2;
+  e1 = adaptiveTest(patch, xave, yave, &x1, &x3);
+  
+  // x2 x3 test
+  xave = (u1x + u3x) / 2;
+  yave = (u1y + y3y) / 2;
+  e3 = adaptiveTest(patch, xave, yave, &x2, &x3);
+  
+  if(e1 && e2 && e3) {
+    // output as is
+    triangle temp;
+    set(&(temp.a.pos), &x1);
+    set(&(temp.a.norm), &x1norm);
+    
+    set(&(temp.b.pos), &x2);
+    set(&(temp.b.norm), &x2norm);
+    
+    set(&(temp.c.pos), &x3);
+    set(&(temp.c.norm), &x3norm);
+    
+    temp.color = color;
+    adaptiveTriangleList.push_back(temp);
+  } else if(e2 && e3) {
+    float x = (u1x + u3x) / 2;
+    float y = (u1y + u3y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, u2x, u2y, x, y, depth - 1);
+    subdivideAdaptiveTriangle(patch, x, y, u2x, u2y, u3x, u3y, depth - 1);
+  } else if(e1 && e3) {
+    float x = (u1x + u2x) / 2;
+    float y = (u1y + u2y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, x, y, u3x, u3y, depth - 1);
+    subdivideAdaptiveTriangle(patch, x, y, u2x, u2y, u3x, u3y, depth - 1);
+  } else if(e1 && e2) {
+    float x = (u2x + u3x) / 2;
+    float y = (u2y + u3y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, x, y, u3x, u3y, depth - 1);
+    subdivideAdaptiveTriangle(patch, u1x, u1y, u2x, u2y, x, y, depth - 1);
+  } else if(e3) {
+    float x1 = (u1x + u3x) / 2;
+    float y1 = (u1y + u3y) / 2;
+    float x2 = (u1x + u2x) / 2;
+    float y2 = (u1y + u2y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, x2, y2, x1, y1, depth - 1);
+    subdivideAdaptiveTriangle(patch, x1, y1, x2, y2, u3x, u3y, depth - 1);
+    subdivideAdaptiveTriangle(patch, x2, y2, u2x, u2y, u3x, u3y, depth - 1);
+  } else if(e1) {
+    float x1 = (u1x + u2x) / 2;
+    float y1 = (u1y + u2y) / 2;
+    float x2 = (u2x + u3x) / 2;
+    float y2 = (u2y + u3y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, x2, y2, u3x, u3y, depth - 1);
+    subdivideAdaptiveTriangle(patch, u1x, u1y, x1, y1, x2, y2, depth - 1);
+    subdivideAdaptiveTriangle(patch, x1, y1, u2x, u2y, x2, y2, depth - 1);
+  } else if(e2) {
+    float x1 = (u1x + u3x) / 2;
+    float y1 = (u1y + u3y) / 2;
+    float x2 = (u2x + u3x) / 2;
+    float y2 = (u2y + u3y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, u2x, u2y, x1, y1, depth - 1);
+    subdivideAdaptiveTriangle(patch, x1, y1, x2, y2, u3x, u3y, depth - 1);
+    subdivideAdaptiveTriangle(patch, x1, y1, u2x, u2y, x2, y2, depth - 1);
+  } else {
+    float x1 = (u1x + u2x) / 2;
+    float y1 = (u1y + u2y) / 2;
+    float x2 = (u1x + u3x) / 2;
+    float y2 = (u1y + u3y) / 2;
+    float x3 = (u2x + u3x) / 2;
+    float y3 = (u2y + u3y) / 2;
+    subdivideAdaptiveTriangle(patch, u1x, u1y, x1, y1, x2, y2, depth - 1);
+    subdivideAdaptiveTriangle(patch, x2, y2, x3, y3, u3x, u3y, depth - 1);
+    subdivideAdaptiveTriangle(patch, x2, y2, x3, y3, x1, y1, depth - 1);
+    subdivideAdaptiveTriangle(patch, x1, y1, u2x, u2y, x3, y3, depth - 1);
+  }
+}
 
-void subdivideAdaptive(patch* patch, float step) {
-
+bool adaptiveTest(patch* patch, float xave, float yave, vec3* v1, vec3* v2) {
+  point p;
+  vec3 temp1;
+  vec3 temp2;
+  bezPatchInterp(&p, patch, xave, yave);
+  set(&temp1, &(p.pos));
+  add(&temp2, &v1, &v2);
+  scale(&temp2, &temp2, 0.5f);
+  subtract(&temp1, &temp1, &temp2);
+  mag = magnitude(&temp1);
+  return mag < lambda;
 }
 
 
