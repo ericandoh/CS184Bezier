@@ -107,6 +107,7 @@ int max_subdivisions = 7;
 
 //the triangles to render
 triangle** triangles;
+int* triangle_counts;
 
 color* blue;
 color* red;
@@ -124,6 +125,10 @@ float angle_change = 2*PI / 30.0f;
 std::vector<triangle> adaptiveTriangleList;
 
 void myDisplay();
+
+void subdivideAdaptiveTriangle(patch* patch, float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, int depth);
+
+bool adaptiveTest(patch* patch, float xave, float yave, vec3* v1, vec3* v2);
 
 //****************************************************
 // Simple init function
@@ -295,7 +300,7 @@ void crossProduct(vec3* dest, vec3* first, vec3* second) {
   dest->z = first->x * second->y - first->y * second->x;
 }
 
-void float magnitude(vec3* a) {
+float magnitude(vec3* a) {
   return sqrt(a->x * a->x + a->y * a->y + a->z * a->z);
 }
 
@@ -413,7 +418,7 @@ triangle* subdivideAdaptive(patch* patch) {
   triangle_count = adaptiveTriangleList.size();
   triangle* my_triangles = (triangle*) malloc(triangle_count* sizeof(triangle));
   for(int i = 0; i < triangle_count; i++) {
-    my_triangles[i] = triangle_count.at(i);
+    my_triangles[i] = adaptiveTriangleList.at(i);
   }
   return my_triangles;
 }
@@ -449,7 +454,7 @@ void subdivideAdaptiveTriangle(patch* patch, float u1x, float u1y, float u2x, fl
     set(&(temp.c.pos), &x3);
     set(&(temp.c.norm), &x3norm);
     
-    temp.color = color;
+    //temp.color = color;
     adaptiveTriangleList.push_back(temp);
     return;
   }
@@ -463,12 +468,12 @@ void subdivideAdaptiveTriangle(patch* patch, float u1x, float u1y, float u2x, fl
   
   // x1 x3 test
   xave = (u1x + u3x) / 2;
-  yave = (u1y + y3y) / 2;
+  yave = (u1y + u3y) / 2;
   e1 = adaptiveTest(patch, xave, yave, &x1, &x3);
   
   // x2 x3 test
   xave = (u1x + u3x) / 2;
-  yave = (u1y + y3y) / 2;
+  yave = (u1y + u3y) / 2;
   e3 = adaptiveTest(patch, xave, yave, &x2, &x3);
   
   if(e1 && e2 && e3) {
@@ -483,7 +488,7 @@ void subdivideAdaptiveTriangle(patch* patch, float u1x, float u1y, float u2x, fl
     set(&(temp.c.pos), &x3);
     set(&(temp.c.norm), &x3norm);
     
-    temp.color = color;
+    //temp.color = color;
     adaptiveTriangleList.push_back(temp);
   } else if(e2 && e3) {
     float x = (u1x + u3x) / 2;
@@ -544,10 +549,10 @@ bool adaptiveTest(patch* patch, float xave, float yave, vec3* v1, vec3* v2) {
   vec3 temp2;
   bezPatchInterp(&p, patch, xave, yave);
   set(&temp1, &(p.pos));
-  add(&temp2, &v1, &v2);
+  add(&temp2, v1, v2);
   scale(&temp2, &temp2, 0.5f);
   subtract(&temp1, &temp1, &temp2);
-  mag = magnitude(&temp1);
+  float mag = magnitude(&temp1);
   return mag < lambda;
 }
 
@@ -592,7 +597,7 @@ void myDisplay() {
             0.0f, 1.0f, 0.0f);    // up vector
 
   for (int x = 0; x < patch_count; x++) {
-    for (int i = 0; i < triangle_count; i++) {
+    for (int i = 0; i < triangle_counts[x]; i++) {
       drawTriangle(&(triangles[x][i]));
     }
   }
@@ -853,20 +858,37 @@ int main(int argc, char *argv[]) {
   cout << "This needs work - go through all patches + amalgate traingels\n";
 
   triangles = (triangle**) malloc(sizeof(triangle*) * patch_count);
+  triangle_counts = (int*) malloc(sizeof(int)*patch_count);
 
-  for (int i = 0; i < patch_count; i++) {
-    if (i % 2 == 0) {
-      triangles[i] = subdivideUniform(&(patches[i]), step, blue);
+  if (adaptive) {
+    for (int i = 0; i < patch_count; i++) {
+      if (i % 2 == 0) {
+        triangles[i] = subdivideAdaptive(&(patches[i]));
+        triangle_counts[i] = triangle_count;
+      }
+      else {
+        triangles[i] = subdivideAdaptive(&(patches[i]));
+        triangle_counts[i] = triangle_count;
+      }
     }
-    else {
-      triangles[i] = subdivideUniform(&(patches[i]), step, red);
+  }
+  else {
+    for (int i = 0; i < patch_count; i++) {
+      if (i % 2 == 0) {
+        triangles[i] = subdivideUniform(&(patches[i]), step, blue);
+        triangle_counts[i] = triangle_count;
+      }
+      else {
+        triangles[i] = subdivideUniform(&(patches[i]), step, red);
+        triangle_counts[i] = triangle_count;
+      }
     }
   }
 
+  
+
   //triangle_count = sizeof(*triangles) / sizeof(triangle);
 
-
-  cout << "Making triangles" << triangle_count << "\n";
 
   //This initializes glut
   glutInit(&argc, argv);
