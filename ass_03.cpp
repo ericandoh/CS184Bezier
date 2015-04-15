@@ -472,8 +472,8 @@ void subdivideAdaptiveTriangle(patch* patch, float u1x, float u1y, float u2x, fl
   e1 = adaptiveTest(patch, xave, yave, &x1, &x3);
   
   // x2 x3 test
-  xave = (u1x + u3x) / 2;
-  yave = (u1y + u3y) / 2;
+  xave = (u2x + u3x) / 2;
+  yave = (u2y + u3y) / 2;
   e3 = adaptiveTest(patch, xave, yave, &x2, &x3);
   
   if(e1 && e2 && e3) {
