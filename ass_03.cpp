@@ -370,7 +370,7 @@ triangle* subdivideUniform(patch* patch, float step, color* color) {
 
   //round a small bit to account for rounding error
   //number of subdivisions
-  int numdiv = (int) (1.000f / step);
+  int numdiv = (int) (ceil(1.000f / step));
   numdiv += 1;
 
   //buffer to store points
