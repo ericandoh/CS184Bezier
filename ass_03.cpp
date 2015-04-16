@@ -120,7 +120,17 @@ bool isWireframe = false;
 
 float vdistance = 6.0f;
 float angle = 0.0f;
+float z_angle = 0.0f;
 float angle_change = 2*PI / 30.0f;
+float xshift = 0.0f;
+float yshift = 0.0f;
+float xcenter = 0.0f;
+float ycenter = 0.0f;
+float zcenter = 0.0f;
+
+float minx = 1000.0f; float maxx = -1000.0f;
+float miny = 1000.0f; float maxy = -1000.0f;
+float minz = 1000.0f; float maxz = -1000.0f;
 
 std::vector<triangle> adaptiveTriangleList;
 
@@ -217,26 +227,50 @@ void myKeyPressed(unsigned char key, int x, int y) {
       glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
   }
+  else if (key == '+') {
+    vdistance -= 1;
+    if(vdistance < 0)
+      vdistance = 0;
+  }
+  else if (key == '-') {
+    vdistance += 1;
+  }
   myDisplay();
 }
 
 
 void mySpecialInput(int key, int x, int y) {
-  switch(key) {
-    case GLUT_KEY_UP:
-      vdistance -= 1;
-      if (vdistance < 0)
-        vdistance = 0;
-      break;
-    case GLUT_KEY_DOWN:
-      vdistance += 1;
-      break;
-    case GLUT_KEY_LEFT:
-      angle = fmod((angle + angle_change), 2*PI);
-      break;
-    case GLUT_KEY_RIGHT:
-      angle = fmod((angle - angle_change), 2*PI);
-      break;
+  int mod = glutGetModifiers();
+  if(mod == GLUT_ACTIVE_SHIFT) {
+    switch(key) {
+      case GLUT_KEY_UP:
+        yshift -= 1.0f;
+        break;
+      case GLUT_KEY_DOWN:
+        yshift += 1.0f;
+        break;
+      case GLUT_KEY_LEFT:
+        xshift += 1.0f;
+        break;
+      case GLUT_KEY_RIGHT:
+        xshift -= 1.0f;
+        break;
+    }
+  } else {
+    switch(key) {
+      case GLUT_KEY_UP:
+        z_angle = fmod((z_angle + angle_change), 2*PI);
+        break;
+      case GLUT_KEY_DOWN:
+        z_angle = fmod((z_angle - angle_change), 2*PI);
+        break;
+      case GLUT_KEY_LEFT:
+        angle = fmod((angle + angle_change), 2*PI);
+        break;
+      case GLUT_KEY_RIGHT:
+        angle = fmod((angle - angle_change), 2*PI);
+        break;
+    }
   }
   myDisplay();
 }
@@ -588,12 +622,12 @@ void myDisplay() {
   glMatrixMode(GL_MODELVIEW);             // indicate we are specifying camera transformations
   glLoadIdentity();               // make sure transformation is "zero'd"
 
-  float xpos = vdistance * cos(angle);
-  float ypos = 3.0f;
-  float zpos = vdistance * sin(angle);
-
-  gluLookAt(xpos, zpos, ypos,     // eye position
-            0.0f, 0.0f, 0.0f,     // where to look at
+  float xpos = vdistance * cos(angle) * cos(z_angle) + xshift;
+  float ypos = vdistance * sin(angle) * cos(z_angle);
+  float zpos = 3.0f * sin(z_angle) + zshift;
+  
+  gluLookAt(xpos, ypos, zpos,     // eye position
+            xcenter + xshift, ycenter + yshift, zcenter,     // where to look at
             0.0f, 0.0f, 1.0f);    // up vector
 
   for (int x = 0; x < patch_count; x++) {
@@ -642,17 +676,36 @@ patch* readPatches(char* filename) {
           word = strtok (cline, " ");
           subcount = 0;
           while(word != NULL && subcount < 12) {
+            float curr = stof(word);
             if (subcount % 3 == 0) {
               //cout << currentPatch << "/" << curveCount << "/" << subcount / 3 << "/x " << stof(word) << "\n";
-              patches[currentPatch].curves[curveCount].points[subcount / 3].x = stof(word);
+              patches[currentPatch].curves[curveCount].points[subcount / 3].x = curr;
+              if(curr > maxx) {
+                maxx = curr;
+              }
+              if(curr < minx) {
+                minx = curr;
+              }
             }
             else if (subcount % 3 == 1) {
               //cout << currentPatch << "/" << curveCount << "/" << subcount / 3 << "/y " << stof(word) << "\n";
-              patches[currentPatch].curves[curveCount].points[subcount / 3].y = stof(word);
+              patches[currentPatch].curves[curveCount].points[subcount / 3].y = curr;
+              if(curr > maxy) {
+                maxy = curr;
+              }
+              if(curr < miny) {
+                miny = curr;
+              }
             }
             else {
               //cout << currentPatch << "/" << curveCount << "/" << subcount / 3 << "/z " << stof(word) << "\n";
-              patches[currentPatch].curves[curveCount].points[subcount / 3].z = stof(word);
+              patches[currentPatch].curves[curveCount].points[subcount / 3].z = curr;
+              if(curr > maxz) {
+                maxz = curr;
+              }
+              if(curr < minz) {
+                minz = curr;
+              }
             }
             //cout << subcount << "/" << word << "\n";
             subcount++;
@@ -662,6 +715,9 @@ patch* readPatches(char* filename) {
       }
       count++;
     }
+    xcenter = (minx + maxx) / 2;
+    ycenter = (miny + maxy) / 2;
+    zcenter = (minz + maxz) / 2;
     bezierfile.close();
   }
   else {
