@@ -157,9 +157,11 @@ void initScene() {
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
   //setup materials
+  GLfloat mat_ambient[] = { 0.3, 0.3, 0.8 };
   GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0 };
   GLfloat mat_specular[] = { 1.0, 1.0, 1.0 };
   GLfloat mat_shininess[] = { 50.0 };
+  glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
