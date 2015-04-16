@@ -25,6 +25,7 @@
 #include <fstream>
 #include <float.h>
 #include <vector>
+#include <limits>
 
 #define PI 3.14159265  // Should be used from mathlib
 
@@ -128,9 +129,9 @@ float xcenter = 0.0f;
 float ycenter = 0.0f;
 float zcenter = 0.0f;
 
-float minx = 1000.0f; float maxx = -1000.0f;
-float miny = 1000.0f; float maxy = -1000.0f;
-float minz = 1000.0f; float maxz = -1000.0f;
+float minx = -1.0f*std::numeric_limits<float>::max(); float maxx = std::numeric_limits<float>::max();
+float miny = -1.0f*std::numeric_limits<float>::max(); float maxy = std::numeric_limits<float>::max();
+float minz = -1.0f*std::numeric_limits<float>::max(); float maxz = std::numeric_limits<float>::max();
 
 std::vector<triangle> adaptiveTriangleList;
 
