@@ -623,9 +623,9 @@ void myDisplay() {
   glMatrixMode(GL_MODELVIEW);             // indicate we are specifying camera transformations
   glLoadIdentity();               // make sure transformation is "zero'd"
 
-  float xpos = vdistance * cos(angle) * cos(z_angle) + xshift;
+  float xpos = vdistance * cos(angle) * cos(z_angle);
   float ypos = vdistance * sin(angle) * cos(z_angle);
-  float zpos = 3.0f * sin(z_angle) + zshift;
+  float zpos = 3.0f * sin(z_angle);
   
   gluLookAt(xpos, ypos, zpos,     // eye position
             xcenter + xshift, ycenter + yshift, zcenter,     // where to look at
