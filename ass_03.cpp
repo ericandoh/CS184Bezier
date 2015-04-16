@@ -627,8 +627,8 @@ void myDisplay() {
   float ypos = vdistance * sin(angle) * cos(z_angle);
   float zpos = 3.0f * sin(z_angle);
   
-  gluLookAt(xpos, ypos, zpos,     // eye position
-            xcenter + xshift, ycenter + yshift, zcenter,     // where to look at
+  gluLookAt(xpos+xshift, ypos+yshift, zpos,     // eye position
+            xcenter+xshift, ycenter+yshift, zcenter,     // where to look at
             0.0f, 0.0f, 1.0f);    // up vector
 
   for (int x = 0; x < patch_count; x++) {
