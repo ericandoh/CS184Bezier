@@ -637,7 +637,7 @@ void myDisplay() {
 
   float xpos = vdistance * cos(angle) * cos(z_angle);
   float ypos = vdistance * sin(angle) * cos(z_angle);
-  float zpos = 3.0f * sin(z_angle);
+  float zpos = vdistance * sin(z_angle);
   
   gluLookAt(xpos+xshift, ypos+yshift, zpos,     // eye position
             xcenter+xshift, ycenter+yshift, zcenter,     // where to look at
