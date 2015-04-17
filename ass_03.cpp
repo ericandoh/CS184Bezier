@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <cstdlib>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -157,8 +158,17 @@ void initScene() {
   glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
   //setup materials
-  GLfloat mat_ambient[] = { 0.3, 0.3, 0.8 };
-  GLfloat mat_diffuse[] = { 1.0, 0.0, 0.0 };
+  GLfloat mat_ambient[] = { 0.3, 0.3, 0.3 };
+  GLfloat mat_diffuse[] = { 0.0, 0.0, 0.0 };
+
+  srand ( time(NULL) );
+  int choice = rand() % 3;
+  mat_ambient[choice] = 0.8;
+  
+  choice = rand() % 3;
+  cout << choice;
+  mat_diffuse[choice] = 1.0;
+
   GLfloat mat_specular[] = { 1.0, 1.0, 1.0 };
   GLfloat mat_shininess[] = { 50.0 };
   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
