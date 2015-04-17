@@ -1,0 +1,66 @@
+-----------Names-----------
+Names: Jingyu Oh (cs184-da), Richard Jiang (cs184-ce)
+
+-----------Platform----------- 
+Mac OSX Yosemite (with make), Windows (Visual Studio Pro 2012), Instructional Machines
+
+-----------Source Code-----------
+Submitted by cs184-da (Jingyu Oh) as zip hw3. 
+C++ code + binaries with GLUT library (folder glut-3.7.6), using OPENGL
+
+-----------How To Use (MAKE)-----------
+To run:
+1. “make”
+2. “./as3 (args)”
+
+If you get an error “Inconsistency detected by ld.so” simply run with “LD_PRELOAD=/usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 ./as1 (args)” - this is a graphic driver issue (post 80 on piazza). 
+
+To clean (optional):
+1. "make clean"
+
+-----------How To Use (VISUAL STUDIO)-----------
+Put file into Visual Studio and it should run. 
+
+-----------Site-----------
+Our hw3 site is located at: http://inst.cs.berkeley.edu/~CS184-da/hw3/hw3.html and has prettier pictures and stuff. 
+
+-----------Features (Arguments/Input)-----------
+The format of our arguments is:
+"./as3 [inputfile.bez] [param] [-a]"
+
+A sample call would be:
+"./as3 test.bez 0.1 -a"
+
+----MANDATORY(required)-----
+
+-Read in a .bez file ([inputfile.bez])
+
+-Parse param (see below)
+
+-Enable adaptive subdivision [-a]
+if turned on, param becomes the maximum error to allow without splitting triangle in adaptive subdivision
+else, this becomes subdivision step param
+
+-Toggle flat/smooth shading
+Press "s"
+
+-Toggle filled/wireframe mode
+Press "w"
+
+-Rotate view around object
+Press arrow keys
+
+-Translate view around object
+Press shift + arrow keys
+
+-Zoom in/out
+Press +/- keys
+
+
+
+
+
+
+
+
+
